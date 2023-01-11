@@ -14,22 +14,22 @@ class DataSource: InstantiableSource {
     // MARK: - Public Properties
 
     let provider: Data
-    let size: Int
+    let size: FileSize
 
     // MARK: - Private Properties
 
-    private var seekOffset: Int = 0
+    private var seekOffset: FileSize = 0
 
     // MARK: - Lifecycle
 
     required init?(provider data: Data) {
         self.provider = data
-        self.size = data.count
+        self.size = FileSize(data.count)
     }
 
     // MARK: - Internal functions
 
-    func seek(position: Int) -> Bool {
+    func seek(position: FileSize) -> Bool {
         guard position < size else { return false }
 
         self.seekOffset = position
@@ -37,7 +37,7 @@ class DataSource: InstantiableSource {
         return true
     }
 
-    func tell() -> Int {
+    func tell() -> FileSize {
         return seekOffset
     }
 
@@ -45,12 +45,12 @@ class DataSource: InstantiableSource {
         return tell() == size
     }
 
-    func read(amount: Int) -> Data? {
+    func read(amount: FileSize) -> Data? {
         let start = Int(truncatingIfNeeded: seekOffset)
-        let end: Int = min(start.advanced(by: amount), provider.count)
+        let end: Int = min(start.advanced(by: Int(amount)), provider.count)
         let dataChunk = provider.subdata(in: start ..< end)
 
-        seekOffset += dataChunk.count
+        seekOffset += FileSize(dataChunk.count)
 
         return dataChunk
     }

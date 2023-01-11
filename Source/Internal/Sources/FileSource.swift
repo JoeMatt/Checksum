@@ -14,7 +14,7 @@ class FileSource: InstantiableSource {
     // MARK: - Public Properties
 
     let provider: URL
-    let size: Int
+    let size: FileSize
 
     // MARK: - Private Properties
 
@@ -33,7 +33,7 @@ class FileSource: InstantiableSource {
 
         let curpos = ftello(fd)
         fseeko(fd, 0, SEEK_END)
-        size = Int(ftello(fd))
+        size = FileSize(ftello(fd))
         fseeko(fd, curpos, SEEK_SET)
     }
 
@@ -43,25 +43,25 @@ class FileSource: InstantiableSource {
 
     // MARK: - Internal functions
 
-    func seek(position: Int) -> Bool {
+    func seek(position: FileSize) -> Bool {
         guard position < size else { return false }
         
         return (fseeko(fd, off_t(position), SEEK_SET) == 0)
     }
 
-    func tell() -> Int {
-        return Int(ftello(fd))
+    func tell() -> FileSize {
+        return FileSize(ftello(fd))
     }
 
     func eof() -> Bool {
         return tell() == size
     }
 
-    func read(amount: Int) -> Data? {
-        var data = Data(count: amount)
+    func read(amount: FileSize) -> Data? {
+        var data = Data(count: Int(amount))
 
         data.count = data.withUnsafeMutableBytes {
-            fread($0.baseAddress, 1, amount, fd)
+            fread($0.baseAddress, 1, Int(amount), fd)
         }
 
         return data

@@ -15,7 +15,7 @@ class HTTPSource: InstantiableSource {
 
     let provider: URL
 
-    private(set) var size: Int = 0 {
+    private(set) var size: FileSize = 0 {
         didSet {
             sizeKnown = size == -1 ? false : true
         }
@@ -24,7 +24,7 @@ class HTTPSource: InstantiableSource {
     // MARK: - Private Properties
 
     private var urlSession = URLSession(configuration: .ephemeral)
-    private var position: Int = 0
+    private var position: FileSize = 0
     private var sizeKnown: Bool = false
     private let semaphore = DispatchSemaphore(value: 0)
     private let requestTimeOut: TimeInterval = 5.0
@@ -47,13 +47,13 @@ class HTTPSource: InstantiableSource {
 
     // MARK: - Internal functions
 
-    func seek(position: Int) -> Bool {
+    func seek(position: FileSize) -> Bool {
         self.position = position
 
         return true
     }
 
-    func tell() -> Int {
+    func tell() -> FileSize {
         return position
     }
 
@@ -61,7 +61,7 @@ class HTTPSource: InstantiableSource {
         return tell() == size
     }
 
-    func read(amount: Int) -> Data? {
+    func read(amount: FileSize) -> Data? {
         guard amount > 0 else { return nil }
 
         var readData: Data?
@@ -83,10 +83,10 @@ class HTTPSource: InstantiableSource {
             readData = data
 
             if let size = contentRange.size {
-                self.size = size
+                self.size = FileSize(size)
             }
 
-            self.position = contentRange.range.lowerBound + data.count
+            self.position = FileSize(contentRange.range.lowerBound + data.count)
         }
 
         task.resume()
@@ -103,8 +103,8 @@ class HTTPSource: InstantiableSource {
     // MARK: - Private Functions
 
     /// Tries to obtain the `URL`'s content length by performing a `HEAD` request. Returns `nil` if it fails.
-    private func getContentLength(for url: URL) -> Int? {
-        var size: Int?
+    private func getContentLength(for url: URL) -> FileSize? {
+        var size: FileSize?
 
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: requestTimeOut)
 
@@ -113,7 +113,7 @@ class HTTPSource: InstantiableSource {
 
         let task = urlSession.dataTask(with: request) { _, response, error in
             if error == nil, let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                size = Int(httpResponse.expectedContentLength)
+                size = FileSize(httpResponse.expectedContentLength)
             }
 
             self.semaphore.signal()

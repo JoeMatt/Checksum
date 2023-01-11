@@ -26,11 +26,11 @@ public enum Chunksize {
     case huge
 
     /// Custom (user-settable)
-    case custom(size: Int)
+    case custom(size: FileSize)
 }
 
 internal extension Chunksize {
-    var bytes: Int {
+    var bytes: FileSize {
         switch self {
         case .tiny:
             return 16384

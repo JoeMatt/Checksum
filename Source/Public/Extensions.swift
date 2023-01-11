@@ -47,6 +47,7 @@ extension Checksumable {
     /// - Parameter progress: The closure to call to signal progress.
     /// - Parameter completion: The closure to call upon completion containing the result.
     public func checksum(algorithm: DigestAlgorithm,
+                         fromOffset offset: FileSize = 0,
                          chunkSize: Chunksize = .normal,
                          queue: DispatchQueue = .main,
                          progress: ProgressHandler? = nil,
@@ -62,7 +63,14 @@ extension Checksumable {
 
             let cc = CCWrapper(algorithm: algorithm)
             let overallProgress = Progress()
-
+            
+            guard source.seek(position: offset) else {
+                queue.async {
+                    completion(.failure(.outOfBounds))
+                }
+                return
+            }
+            
             while !source.eof() {
                 guard let data = source.read(amount: chunkSize.bytes) else { break }
 
@@ -130,6 +138,7 @@ public extension Array where Element: Checksumable {
     /// - Parameter progress: The closure to call to signal progress.
     /// - Parameter completion: The closure to call upon completion containing the result.
     func checksum(algorithm: DigestAlgorithm,
+                  fromOffset offset: FileSize = 0,
                   chunkSize: Chunksize = .normal,
                   queue: DispatchQueue = .main,
                   progress: ProgressHandler? = nil,
@@ -137,7 +146,9 @@ public extension Array where Element: Checksumable {
         var checksums = [ChecksumResult]()
         let overallProgress = Progress(totalUnitCount: Int64(count))
 
-        for element in self {
+        let offset: Int = Int(offset)
+        let myArray = self[offset...self.count]
+        for element in myArray {
             let elementProgress = Progress()
             overallProgress.addChild(elementProgress, withPendingUnitCount: 1)
 
@@ -151,7 +162,7 @@ public extension Array where Element: Checksumable {
             element.checksum(algorithm: algorithm, chunkSize: chunkSize, queue: queue, progress: progressHandler) { result in
                 checksums.append((checksumable: element, checksum: try? result.get()))
 
-                if checksums.count == self.count {
+                if checksums.count == (self.count - offset) {
                     queue.async {
                         completion(.success(checksums))
                     }

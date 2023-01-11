@@ -14,6 +14,6 @@ public protocol Checksumable {
     var hashValue: Int { get }
 
     /// :nodoc:
-    func checksum(algorithm: DigestAlgorithm, chunkSize: Chunksize, queue: DispatchQueue,
+    func checksum(algorithm: DigestAlgorithm, fromOffset offset: FileSize, chunkSize: Chunksize, queue: DispatchQueue,
                   progress: ProgressHandler?, completion: @escaping CompletionHandler)
 }

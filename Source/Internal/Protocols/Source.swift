@@ -8,12 +8,14 @@
 
 import Foundation
 
-protocol Source {
-    var size: Int { get }
+public typealias FileSize = Int64
 
-    func seek(position: Int) -> Bool
-    func tell() -> Int
-    func read(amount: Int) -> Data?
+protocol Source {
+    var size: FileSize { get }
+
+    func seek(position: FileSize) -> Bool
+    func tell() -> FileSize
+    func read(amount: FileSize) -> Data?
     func eof() -> Bool
 }
 

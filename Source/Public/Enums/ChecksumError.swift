@@ -15,4 +15,7 @@ public enum ChecksumError: Error {
 
     /// Unknown error.
     case unknown
+    
+    /// Out of bounds
+    case outOfBounds
 }
