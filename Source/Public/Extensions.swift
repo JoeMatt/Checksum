@@ -108,14 +108,14 @@ extension Checksumable {
     /// - Parameter chunkSize: The internal buffer's size (mostly relevant for large data computing.)
     ///
     /// - Returns: A `String` containing with the computed checksum.
-    public func checksum(algorithm: DigestAlgorithm, chunkSize: Chunksize = .normal) -> String? {
+    public func checksum(algorithm: DigestAlgorithm, fromOffset offset: FileSize = 0, chunkSize: Chunksize = .normal) -> String? {
         var checksum: String?
         let dispatchGroup = DispatchGroup()
         let dispatchQueue = DispatchQueue.global(qos: .userInitiated)
 
         dispatchGroup.enter()
 
-        self.checksum(algorithm: algorithm, chunkSize: chunkSize, queue: dispatchQueue) { result in
+        self.checksum(algorithm: algorithm, fromOffset: offset, chunkSize: chunkSize, queue: dispatchQueue) { result in
             checksum = try? result.get()
             dispatchGroup.leave()
         }
